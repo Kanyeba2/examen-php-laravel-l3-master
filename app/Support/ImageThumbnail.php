@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Storage;
 
 class ImageThumbnail
 {
+    // Genere des miniatures normalisees pour les images uploades.
     public static function generate(string $sourceRelativePath, string $thumbRelativePath, int $maxWidth = 320, int $maxHeight = 320): ?string
     {
         if (! function_exists('imagecreatetruecolor')) {

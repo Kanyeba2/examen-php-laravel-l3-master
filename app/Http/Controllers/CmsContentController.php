@@ -11,6 +11,7 @@ use Illuminate\View\View;
 
 class CmsContentController extends Controller
 {
+	// Version anglaise de la gestion des contenus CMS en back-office.
 	public function create(Request $request): View
 	{
 		$type = $request->string('type')->value() ?: 'article';

@@ -8,6 +8,7 @@ use Illuminate\View\View;
 
 class NotificationController extends Controller
 {
+    // Expose la consultation et le marquage des notifications utilisateur.
     public function index(Request $request): View
     {
         $user = $request->user();

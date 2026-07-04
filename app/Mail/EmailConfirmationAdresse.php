@@ -9,6 +9,7 @@ use Illuminate\Queue\SerializesModels;
 
 class EmailConfirmationAdresse extends Mailable implements ShouldQueue
 {
+    // Email de confirmation d'adresse associe au cycle d'inscription.
     use Queueable, SerializesModels;
 
     public $utilisateur;

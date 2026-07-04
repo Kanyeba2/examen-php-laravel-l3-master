@@ -8,6 +8,7 @@ use Illuminate\Notifications\Notification;
 
 class StatutDemandeAdoptionNotification extends Notification
 {
+    // Notifie l'utilisateur lorsqu'une demande change de statut.
     use Queueable;
 
     public function __construct(private readonly AdoptionRequest $adoptionRequest)

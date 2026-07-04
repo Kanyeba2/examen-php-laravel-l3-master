@@ -6,6 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateAdoptionStatusRequest extends FormRequest
 {
+    // Valide les transitions de statut d'une demande d'adoption.
     public function authorize(): bool
     {
         return true;

@@ -6,6 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class LoginRequest extends FormRequest
 {
+    // Regroupe les regles de validation du formulaire de connexion.
     public function authorize(): bool
     {
         return true;

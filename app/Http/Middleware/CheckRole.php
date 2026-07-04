@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckRole
 {
+    // Verifie que le role courant correspond aux roles autorises sur la route.
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
         $user = $request->user();

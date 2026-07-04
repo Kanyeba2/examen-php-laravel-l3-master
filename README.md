@@ -693,3 +693,266 @@ php artisan serve
 
 *Document préparé par le corps enseignant de la FASI/UPC — Cours Laravel L3 · 2025–2026*
 
+---
+
+## Ce que fait ce projet
+
+Ce projet est une application web de gestion d'adoption d'animaux. Il permet a une structure (refuge/association/centre d'adoption) de publier des animaux, de recevoir des demandes d'adoption, de suivre le traitement des dossiers et de tracer les actions importantes dans l'application.
+
+Concretement, l'application couvre un cycle metier complet:
+
+- inscription et connexion securisee des utilisateurs (avec OTP/2FA)
+- gestion multi-roles (`admin`, `manager`, `client`) avec acces differencies
+- consultation et gestion du catalogue d'animaux (CRUD, filtres, recherche)
+- creation et suivi des demandes d'adoption
+- notifications internes + emails automatiques
+- gestion des paiements mobiles (initiation, confirmation, statuts)
+- generation de recus PDF pour les paiements
+- tableau de bord administrateur (statistiques, activites recentes, supervision)
+
+## De quoi il s'agit (vision fonctionnelle)
+
+L'objectif principal est de digitaliser le processus d'adoption: reduire les traitements manuels, mieux suivre les demandes, professionnaliser la communication avec les adoptants et centraliser les donnees metier dans une seule plateforme.
+
+Le projet a ete construit pour demontrer les competences Laravel L3 sur un cas realiste: architecture MVC, validation, authentification, middlewares, API REST, evenements/listeners, notifications, emailing, paiement et deploiement.
+
+## Avec quoi le projet est fait (stack technique)
+
+- Backend: Laravel 13 (PHP 8.4)
+- Base de donnees: SQLite en local (support PostgreSQL/MySQL pour production)
+- Frontend: Blade + Bootstrap + JavaScript (Vite)
+- Auth API: Laravel Sanctum
+- Emails: Mailables Laravel (Mailtrap/SMTP selon environnement)
+- PDF: `barryvdh/laravel-dompdf`
+- Paiement mobile: integration via service `LabPayService`
+- Journalisation: logs applicatifs + table `journal_activites`
+
+## Pourquoi ce projet a ete fait
+
+- repondre aux exigences de l'examen final Laravel L3
+- appliquer les bonnes pratiques de developpement web moderne
+- fournir une base exploitable et extensible pour une application metier reelle
+- prouver la capacite a livrer un projet complet: conception, implementation, documentation, tests de fonctionnement et deploiement
+
+## Ce que le professeur a demande et ce que nous avons realise
+
+Synthese globale des exigences de l'enonce et de l'etat du projet:
+
+- Niveau 1 (Fondamentaux): realise
+  - MVC, migrations/seeders, CRUD, routes nommees, Blade, validations CSRF
+- Niveau 2 (Intermediaires): realise
+  - authentification multi-roles, middlewares personnalises, dashboard admin, mailing, 2FA OTP
+- Niveau 3 (Avances): realise (plus de 3 fonctionnalites)
+  - API REST Sanctum, upload de fichiers + miniatures, notifications, evenement/listener, paiement mobile, PDF, filtres avances, logs
+- Deploiement (Point 20): prepare et en cours de finalisation
+  - fichiers et configuration de deploiement ajoutes (Docker/Render, Procfile, railway, vercel)
+
+Exigences de documentation demandees par le professeur:
+
+- Description du projet: fournie
+- Instructions d'installation: fournies
+- Comptes de test: fournis
+- Fonctionnalites implementees: detaillees point par point
+- Schema de base de donnees: fourni dans [docs/schema-base-de-donnees.md](docs/schema-base-de-donnees.md)
+- Difficultes et solutions: documentees pendant le projet
+- Lien de deploiement: a renseigner apres mise en ligne definitive
+
+## Authentification 2FA: fonctionnement detaille
+
+### Comment le 2FA fonctionne dans le projet
+
+1. L'utilisateur soumet email + mot de passe sur la page de connexion.
+2. Si le compte est actif et le 2FA active, l'application ne connecte pas encore l'utilisateur.
+3. L'application genere un code OTP a 6 chiffres et le stocke en base avec expiration (10 minutes).
+4. Le code est envoye par email.
+5. L'utilisateur saisit le code sur la page de verification 2FA.
+6. Le code est valide (bon utilisateur, non utilise, non expire).
+7. Si valide, le code est marque comme utilise et la session utilisateur est ouverte.
+
+### Fichiers concernes par le 2FA
+
+- Controleur principal: [app/Http/Controllers/AuthController.php](app/Http/Controllers/AuthController.php)
+- Modele OTP: [app/Models/CodeVerification.php](app/Models/CodeVerification.php)
+- Migration OTP: [database/migrations/2026_07_03_000005_create_code_verifications_table.php](database/migrations/2026_07_03_000005_create_code_verifications_table.php)
+- Mailable OTP: [app/Mail/CodeOtpConnexion.php](app/Mail/CodeOtpConnexion.php)
+- Vue de verification OTP: [resources/views/auth/two-factor-verify.blade.php](resources/views/auth/two-factor-verify.blade.php)
+- Activation/desactivation 2FA utilisateur: [database/migrations/2026_07_04_000006_add_two_factor_enabled_to_users_table.php](database/migrations/2026_07_04_000006_add_two_factor_enabled_to_users_table.php)
+- Attribut utilisateur 2FA: [app/Models/User.php](app/Models/User.php)
+- Routes web (verification/renvoi): [routes/web.php](routes/web.php)
+
+### Code qui genere le code OTP
+
+Extrait de la logique de generation dans [app/Http/Controllers/AuthController.php](app/Http/Controllers/AuthController.php):
+
+```php
+private function createOtpCodeFor(User $user): string
+{
+    CodeVerification::where('user_id', $user->id)
+        ->where('utilise', false)
+        ->update(['utilise' => true]);
+
+    $code = (string) random_int(100000, 999999);
+
+    CodeVerification::create([
+        'user_id' => $user->id,
+        'code' => $code,
+        'expires_at' => now()->addMinutes(10),
+        'utilise' => false,
+    ]);
+
+    return $code;
+}
+```
+
+Ce code:
+
+- invalide d'abord les anciens codes non utilises
+- genere un code aleatoire 6 chiffres
+- stocke le code avec date d'expiration
+- retourne le code pour l'envoi email
+
+## Paiement mobile: parcours client et administrateur
+
+### Cote client (utilisateur)
+
+1. Le client ouvre la page paiements et voit ses transactions avec filtres (statut, fournisseur, periode, recherche).
+2. Le client choisit une demande d'adoption a payer et soumet le formulaire d'initiation.
+3. L'application cree une transaction avec statut `en_attente` et une reference interne unique.
+4. L'application appelle le service de paiement (LabPay) puis met a jour le statut (`en_attente`, `reussi`, `echoue`).
+5. Le client peut relancer une confirmation manuelle du paiement via l'action de confirmation.
+6. Si le paiement est reussi, le client peut telecharger le recu PDF.
+7. Si la demande est approuvee et le paiement confirme, le statut de l'animal est synchronise vers `adopte`.
+
+Fichiers principaux cote client:
+
+- [app/Http/Controllers/MobilePaymentController.php](app/Http/Controllers/MobilePaymentController.php)
+- [app/Services/LabPayService.php](app/Services/LabPayService.php)
+- [resources/views/payments/index.blade.php](resources/views/payments/index.blade.php)
+- [resources/views/pdf/receipt-mobile-payment.blade.php](resources/views/pdf/receipt-mobile-payment.blade.php)
+- [routes/web.php](routes/web.php)
+
+### Cote administrateur / manager
+
+1. L'admin/manager ouvre la vue globale des paiements via la route admin dediee.
+2. Il consulte l'ensemble des paiements (suivi operationnel et verification des statuts).
+3. Il peut ouvrir le recu PDF d'une transaction pour controle et archivage.
+4. Les callbacks fournisseur et confirmations mettent a jour l'etat des transactions, puis les logs d'activite.
+5. Les changements de statut de paiement declenchent l'event metier associe et l'envoi du recu si applicable.
+
+Fichiers principaux cote admin:
+
+- [app/Http/Controllers/DashboardController.php](app/Http/Controllers/DashboardController.php)
+- [app/Http/Controllers/MobilePaymentController.php](app/Http/Controllers/MobilePaymentController.php)
+- [app/Events/MobilePaymentStatusUpdated.php](app/Events/MobilePaymentStatusUpdated.php)
+- [app/Listeners/SendMobilePaymentReceipt.php](app/Listeners/SendMobilePaymentReceipt.php)
+- [routes/web.php](routes/web.php)
+
+## Demande d'adoption: parcours client et administrateur
+
+### Cote client (utilisateur)
+
+1. Le client consulte une fiche animal puis clique sur demande d'adoption.
+2. L'application verifie les preconditions:
+  - pas de doublon de demande active pour le meme animal
+  - animal non deja adopte
+  - pas de cas deja adopte (demande approuvee + paiement reussi)
+3. Si valide, la demande est enregistree avec statut initial `en_attente`.
+4. L'utilisateur recoit une confirmation email.
+5. Les admins/managers sont notifies (notification base + email selon canal configure).
+6. Le client suit ensuite l'evolution de sa demande via dashboard et notifications.
+
+Fichiers principaux cote client:
+
+- [app/Http/Controllers/AdoptionRequestController.php](app/Http/Controllers/AdoptionRequestController.php)
+- [app/Http/Requests/StoreAdoptionRequest.php](app/Http/Requests/StoreAdoptionRequest.php)
+- [resources/views/adoptions/create.blade.php](resources/views/adoptions/create.blade.php)
+- [app/Mail/ConfirmationActionImportante.php](app/Mail/ConfirmationActionImportante.php)
+- [app/Notifications/NouvelleDemandeAdoptionNotification.php](app/Notifications/NouvelleDemandeAdoptionNotification.php)
+
+### Cote administrateur / manager
+
+1. L'admin/manager ouvre la liste des demandes d'adoption.
+2. Il analyse le dossier, puis met a jour le statut (`en_attente`, `approuve`, etc.).
+3. Lors de la mise a jour:
+  - l'utilisateur est notifie
+  - un email de changement de statut est envoye
+4. Si la demande est `approuvee` et qu'un paiement `reussi` existe, l'animal passe automatiquement a `adopte`.
+5. Le suivi post-adoption et les journaux d'activite permettent le controle metier.
+
+Fichiers principaux cote admin:
+
+- [app/Http/Controllers/AdoptionRequestController.php](app/Http/Controllers/AdoptionRequestController.php)
+- [app/Http/Requests/UpdateAdoptionStatusRequest.php](app/Http/Requests/UpdateAdoptionStatusRequest.php)
+- [resources/views/adoptions/index.blade.php](resources/views/adoptions/index.blade.php)
+- [app/Mail/NotificationStatutDemande.php](app/Mail/NotificationStatutDemande.php)
+- [app/Notifications/StatutDemandeAdoptionNotification.php](app/Notifications/StatutDemandeAdoptionNotification.php)
+
+## Explication des fichiers Controller, Model et View
+
+### 1) Les fichiers Controllers (dossier app/Http/Controllers)
+
+Un Controller recoit la requete HTTP, applique la logique applicative, appelle les Model si besoin, puis retourne soit une View (web), soit du JSON (API), soit une redirection.
+
+Exemples dans ce projet:
+
+- [app/Http/Controllers/AuthController.php](app/Http/Controllers/AuthController.php): gere l'inscription, la connexion, le 2FA OTP, la verification du code et la deconnexion.
+- [app/Http/Controllers/AnimalController.php](app/Http/Controllers/AnimalController.php): gere le CRUD des animaux (liste, creation, edition, suppression) et les filtres de recherche.
+- [app/Http/Controllers/AdoptionRequestController.php](app/Http/Controllers/AdoptionRequestController.php): gere la creation des demandes d'adoption et la mise a jour des statuts cote manager/admin.
+- [app/Http/Controllers/MobilePaymentController.php](app/Http/Controllers/MobilePaymentController.php): gere l'initiation, la confirmation, les callbacks fournisseur et le PDF de recu.
+- [app/Http/Controllers/DashboardController.php](app/Http/Controllers/DashboardController.php): centralise le dashboard admin (stats, supervision, gestion utilisateurs).
+
+En resume: les Controllers orchestrent le flux entre utilisateur, regles metier et affichage.
+
+### 2) Les fichiers Models (dossier app/Models)
+
+Un Model represente une table de la base de donnees et porte la logique metier liee aux donnees: relations Eloquent, attributs autorises, cast des champs, scopes et helpers metier.
+
+Exemples dans ce projet:
+
+- [app/Models/User.php](app/Models/User.php): table des utilisateurs, role, statut actif, 2FA, notifications et tokens API.
+- [app/Models/Animal.php](app/Models/Animal.php): table des animaux, informations descriptives, statut d'adoption, media associes.
+- [app/Models/AdoptionRequest.php](app/Models/AdoptionRequest.php): demandes d'adoption, statut du dossier, liens vers utilisateur et animal.
+- [app/Models/MobilePayment.php](app/Models/MobilePayment.php): transactions de paiement mobile, reference, montant, fournisseur, statut.
+- [app/Models/ActivityLog.php](app/Models/ActivityLog.php): journal des actions sensibles pour la tracabilite.
+- [app/Models/CodeVerification.php](app/Models/CodeVerification.php): codes OTP utilises pour la verification 2FA.
+
+En resume: les Models representent la base de donnees et encapsulent la logique metier sur les donnees.
+
+### 3) Les fichiers Views (dossier resources/views)
+
+Une View est la partie interface utilisateur (HTML Blade) qui affiche les donnees preparees par les Controllers. Les vues contiennent la presentation, pas la logique metier lourde.
+
+Exemples dans ce projet:
+
+- [resources/views/layouts/app.blade.php](resources/views/layouts/app.blade.php): layout principal (structure commune, navbar, sections partagees).
+- [resources/views/animals/index.blade.php](resources/views/animals/index.blade.php): liste des animaux avec recherche et filtres.
+- [resources/views/adoptions/create.blade.php](resources/views/adoptions/create.blade.php): formulaire de demande d'adoption cote client.
+- [resources/views/adoptions/index.blade.php](resources/views/adoptions/index.blade.php): ecran de suivi et de traitement des demandes cote manager/admin.
+- [resources/views/payments/index.blade.php](resources/views/payments/index.blade.php): historique des paiements avec filtres et actions.
+- [resources/views/dashboard/admin.blade.php](resources/views/dashboard/admin.blade.php): vue du dashboard administrateur (stats + suivi).
+
+Vues speciales du projet:
+
+- [resources/views/emails](resources/views/emails): templates des emails automatiques (OTP, notifications, confirmations).
+- [resources/views/pdf/receipt-mobile-payment.blade.php](resources/views/pdf/receipt-mobile-payment.blade.php): template de recu PDF de paiement.
+
+En resume: les Views affichent les donnees et l'experience utilisateur finale.
+
+### 4) Comment ces trois types de fichiers travaillent ensemble
+
+Flux standard dans le projet:
+
+1. Route dans [routes/web.php](routes/web.php) ou [routes/api.php](routes/api.php)
+2. Appel d'une methode Controller
+3. Le Controller lit/ecrit via les Models
+4. Le Controller retourne une View Blade (web) ou JSON (API)
+
+Exemple concret (demande d'adoption):
+
+1. Formulaire dans [resources/views/adoptions/create.blade.php](resources/views/adoptions/create.blade.php)
+2. Soumission vers route dans [routes/web.php](routes/web.php)
+3. Traitement par [app/Http/Controllers/AdoptionRequestController.php](app/Http/Controllers/AdoptionRequestController.php)
+4. Persistance via [app/Models/AdoptionRequest.php](app/Models/AdoptionRequest.php)
+5. Redirection avec message de succes et notifications
+
+

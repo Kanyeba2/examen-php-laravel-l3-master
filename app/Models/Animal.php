@@ -9,8 +9,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Animal extends Model
 {
+    // Table metier des animaux proposes a l'adoption.
     protected $table = 'animaux';
 
+    // Champs modifiables depuis les formulaires web/API.
     protected $fillable = [
         'nom',
         'espece',
@@ -28,20 +30,24 @@ class Animal extends Model
         'cree_par_utilisateur_id',
     ];
 
+    // Type fort pour le prix (utile pour PDF, API et paiements).
     protected $casts = [
         'prix_adoption' => 'decimal:2',
     ];
 
+    // Utilisateur (manager/admin) ayant cree la fiche animal.
     public function createur(): BelongsTo
     {
         return $this->belongsTo(User::class, 'cree_par_utilisateur_id');
     }
 
+    // Demandes d'adoption liees a cet animal.
     public function demandesAdoption(): HasMany
     {
         return $this->hasMany(AdoptionRequest::class, 'animal_id');
     }
 
+    // Favoris many-to-many entre clients et animaux.
     public function favoriParUtilisateurs(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'animal_favorites', 'animal_id', 'user_id')->withTimestamps();

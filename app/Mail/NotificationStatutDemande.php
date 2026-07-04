@@ -10,6 +10,7 @@ use Illuminate\Queue\SerializesModels;
 
 class NotificationStatutDemande extends Mailable implements ShouldQueue
 {
+    // Notifie le client d'un changement de statut de sa demande.
     use Queueable, SerializesModels;
 
     public AdoptionRequest $demande;

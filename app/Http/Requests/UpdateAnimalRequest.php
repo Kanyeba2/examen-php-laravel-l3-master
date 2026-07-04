@@ -6,6 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateAnimalRequest extends FormRequest
 {
+    // Valide la mise a jour d'une fiche animal existante.
     public function authorize(): bool
     {
         return true;

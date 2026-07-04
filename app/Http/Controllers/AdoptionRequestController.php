@@ -20,6 +20,7 @@ use Illuminate\View\View;
 
 class AdoptionRequestController extends Controller
 {
+    // Gere la soumission et le suivi des demandes d'adoption.
     public function index(): View
     {
         $requests = AdoptionRequest::with([

@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notification;
 
 class NouvelleDemandeAdoptionNotification extends Notification
 {
+    // Notification staff lors de l'arrivee d'une nouvelle demande.
     use Queueable;
 
     public function __construct(private readonly AdoptionRequest $adoptionRequest)

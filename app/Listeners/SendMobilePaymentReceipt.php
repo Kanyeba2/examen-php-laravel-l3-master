@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Mail;
 
 class SendMobilePaymentReceipt implements ShouldQueue
 {
+    // Listener qui envoie automatiquement le recu apres paiement reussi.
     public function handle(MobilePaymentStatusUpdated $event): void
     {
         if ($event->newStatus !== 'reussi') {

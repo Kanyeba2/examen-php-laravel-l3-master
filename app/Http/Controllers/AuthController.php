@@ -20,10 +20,12 @@ use Illuminate\View\View;
 
 class AuthController extends Controller
 {
+    // Gere authentification, profil utilisateur et logique OTP/2FA.
     public function showLogin(): View
     {
         return view('auth.login');
     }
+//le code qui fait la connexion de l'utilisateur et la verification de son compte (actif ou inactif) et la verification du 2FA
 
     public function login(LoginRequest $request): RedirectResponse
     {
@@ -55,7 +57,7 @@ class AuthController extends Controller
 
             return back()->withErrors(['email' => 'Votre compte est desactive.']);
         }
-
+// le code qui fait la verification du 2FA pour l'utilisateur et l'envoie d'un email avec un code OTP
         if ($user->two_factor_enabled) {
             $request->session()->put('2fa:user_id', $user->id);
             $request->session()->put('2fa:remember', $request->boolean('remember'));
@@ -67,7 +69,7 @@ class AuthController extends Controller
             if (app()->isLocal()) {
                 $message .= ' Code de test local: '.$code;
             }
-
+//
             ActivityLog::trace(
                 $user->id,
                 'otp_envoye_connexion',
@@ -92,12 +94,12 @@ class AuthController extends Controller
 
         return redirect($this->redirectToRole($user->role));
     }
-
+//le code qui fait l'affichage de la page d'inscription de l'utilisateur
     public function showRegister(): View
     {
         return view('auth.register');
     }
-
+//le code qui fait l'inscription d'un utilisateur et l'envoie d'un email de bienvenue et un email de confirmation d'adresse
     public function register(RegisterRequest $request): RedirectResponse
     {
         $data = $request->validated();
@@ -115,7 +117,7 @@ class AuthController extends Controller
             'expires_at' => now()->addMinutes(10),
             'utilise' => false,
         ]);
-
+//cette partie permett de faire 
         Mail::to($user->email)->queue(new EmailBienvenue($user));
         Mail::to($user->email)->queue(new EmailConfirmationAdresse($user, $verificationCode));
 
@@ -131,6 +133,7 @@ class AuthController extends Controller
 
         return redirect()->route('dashboard');
     }
+//le code qui fait la deconnexion de l'utilisateur et la suppression de la session
 
     public function logout(Request $request): RedirectResponse
     {
@@ -159,7 +162,8 @@ class AuthController extends Controller
 
         return view('auth.two-factor-verify');
     }
-
+//le code qui fait la verification du code OTP pour l'utilisateur
+// et la redirection vers la page de l'utilisateur selon son role (admin, manager, client)
     public function verifyTwoFactorCode(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -219,21 +223,21 @@ class AuthController extends Controller
 
         return redirect($this->redirectToRole($user->role));
     }
-
+// le code qui renvoie un nouveau code OTP à l'utilisateur si la session 2FA est toujours active
     public function resendTwoFactorCode(Request $request): RedirectResponse
     {
         $userId = $request->session()->get('2fa:user_id');
         if (! $userId) {
             return redirect()->route('login')->withErrors(['email' => 'Session 2FA expiree. Veuillez vous reconnecter.']);
         }
-
+// le code qui verifie si l'utilisateur existe et si oui, il genere un nouveau code OTP et l'envoie par email
         $user = User::find($userId);
         if (! $user) {
             $request->session()->forget(['2fa:user_id', '2fa:remember']);
 
             return redirect()->route('login')->withErrors(['email' => 'Utilisateur introuvable.']);
         }
-
+// le code qui genere un nouveau code OTP et l'envoie par email
         $code = $this->createOtpCodeFor($user);
         Mail::to($user->email)->send(new CodeOtpConnexion($user, $code));
 
@@ -244,14 +248,15 @@ class AuthController extends Controller
 
         return back()->with('success', $message);
     }
-
+// le code qui fait l'affichage du profil de l'utilisateur
     public function showProfile(): View
     {
         return view('profile.index', [
             'user' => Auth::user(),
         ]);
     }
-
+//le code qui fait la mise à jour du profil de l'utilisateur (nom, telephone, adresse, photo de profil)
+// et la possibilité de supprimer la photo de profil
     public function updateProfile(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -287,7 +292,7 @@ class AuthController extends Controller
 
         return back()->with('success', 'Profil mis a jour avec succes.');
     }
-
+//le code qui fait la mise à jour du parametre 2FA pour l'utilisateur (activer ou désactiver 2FA)
     public function updateTwoFactorSetting(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -302,7 +307,7 @@ class AuthController extends Controller
 
         return back()->with('success', 'Parametre 2FA mis a jour avec succes.');
     }
-
+//le code qui génèrer le code de OTP
     private function createOtpCodeFor(User $user): string
     {
         CodeVerification::where('user_id', $user->id)
@@ -320,7 +325,8 @@ class AuthController extends Controller
 
         return $code;
     }
-
+// le code qui fait la rediction de chacun à sa partie (un client puisse voir sa page et un admin puisse voir sa page)
+// et le gestionnaire puisse voir aussi sa page 
     private function redirectToRole(string $role): string
     {
         return match ($role) {

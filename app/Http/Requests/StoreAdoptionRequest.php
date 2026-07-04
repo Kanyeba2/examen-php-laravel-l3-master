@@ -6,6 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreAdoptionRequest extends FormRequest
 {
+    // Valide la soumission d'une nouvelle demande d'adoption.
     public function authorize(): bool
     {
         return true;

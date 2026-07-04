@@ -10,6 +10,7 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
+    // Enregistre directives Blade et configurations globales applicatives.
     /**
      * Register any application services.
      */

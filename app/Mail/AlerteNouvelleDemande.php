@@ -10,6 +10,7 @@ use Illuminate\Queue\SerializesModels;
 
 class AlerteNouvelleDemande extends Mailable implements ShouldQueue
 {
+    // Email interne vers staff lors d'une nouvelle demande d'adoption.
     use Queueable, SerializesModels;
 
     public AdoptionRequest $demande;

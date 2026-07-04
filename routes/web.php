@@ -10,13 +10,13 @@ use App\Http\Controllers\MobilePaymentController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
-
+// je donne la route pour la page d'accueil et redirige les utilisateurs vers le tableau de bord approprié en fonction de leur rôle (admin, manager, client)
 Route::get('/', function () {
     // Central entrypoint: route users to the right dashboard based on role.
     if (!Auth::check()) {
         return redirect()->route('login');
     }
-
+// je donne la route pour la page d'accueil et redirige les utilisateurs vers le tableau de bord approprié en fonction de leur rôle (admin, manager, client)
     $user = Auth::user();
 
     return match ($user?->role) {
@@ -25,7 +25,7 @@ Route::get('/', function () {
         default => redirect()->route('dashboard'),
     };
 })->name('home');
-
+// je donne la route pour la page de test de l'API
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.attempt')->middleware('rate');
@@ -35,9 +35,10 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.store')->middleware('rate');
 });
-
+// je donne la route pour la page de deconnexion de l'utilisateur
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
-
+//c'est quoi middleware 'auth' et 'active' ?
+// 'auth' middleware assure que l'utilisateur est authentifie et 'active' middleware verifie si le compte d'utilisateur est actif. si l'une des conditions échoue, l'utilisateur sera redirigé vers la page de connexion ou une page d'erreur appropriée.
 Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'client'])->name('dashboard')->middleware('role:client');
     Route::get('/profil', [AuthController::class, 'showProfile'])->name('profile.show');
@@ -59,7 +60,8 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/animaux/{animal}/demande', [AdoptionRequestController::class, 'create'])->name('adoptions.create');
     Route::post('/animaux/{animal}/demande', [AdoptionRequestController::class, 'store'])->name('adoptions.store')->middleware('rate');
 });
-
+// je donne la route pour la page de gestion des utilisateurs, des roles et des permissions pour les administrateurs et les managers
+//
 Route::middleware(['auth', 'active', 'role:manager,admin'])->group(function () {
     Route::get('/manager/dashboard', [DashboardController::class, 'manager'])->name('manager.dashboard');
     Route::resource('animals', AnimalController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
@@ -85,7 +87,7 @@ Route::middleware(['auth', 'active', 'role:manager,admin'])->group(function () {
     Route::post('/parametres', [GestionAdministrationController::class, 'mettreAJourParametres'])->name('admin.settings.update')->middleware('rate');
     Route::post('/demandes/{adoptionRequest}/statut', [AdoptionRequestController::class, 'updateStatus'])->name('adoptions.status')->middleware('rate');
 });
-
+// je donne la route pour la page de gestion des utilisateurs, des roles et des permissions pour les administrateurs uniquement
 Route::middleware(['auth', 'active', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', [DashboardController::class, 'admin'])->name('admin.dashboard');
     Route::get('/admin/logs', [DashboardController::class, 'admin'])->name('admin.logs.index');
@@ -93,7 +95,7 @@ Route::middleware(['auth', 'active', 'role:admin'])->group(function () {
     Route::patch('/admin/users/{user}/active', [DashboardController::class, 'toggleUserActive'])->name('admin.users.toggle')->middleware('rate');
     Route::delete('/admin/users/{user}', [DashboardController::class, 'destroyUser'])->name('admin.users.destroy')->middleware('rate');
 });
-
+// je donne la route pour la page de gestion des paiements mobiles pour les administrateurs et les managers
 Route::post('/paiements/labpay/callback', [MobilePaymentController::class, 'callback'])->name('payments.callback.labpay');
 
 Route::middleware(['auth', 'active'])->group(function () {

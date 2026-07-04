@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 
 class AnimalApiController extends Controller
 {
+    // API REST CRUD des animaux avec reponses JSON standardisees.
     use ApiResponse;
 
     public function index(): JsonResponse

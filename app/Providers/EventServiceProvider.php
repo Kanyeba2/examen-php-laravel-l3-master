@@ -8,6 +8,7 @@ use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvi
 
 class EventServiceProvider extends ServiceProvider
 {
+    // Mappe les events metier avec leurs listeners associes.
     protected $listen = [
         MobilePaymentStatusUpdated::class => [
             SendMobilePaymentReceipt::class,

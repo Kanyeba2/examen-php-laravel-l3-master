@@ -11,6 +11,7 @@ use Illuminate\View\View;
 
 class GestionAdministrationController extends Controller
 {
+    // Centralise la gestion des utilisateurs, roles et parametres systeme.
     private const ROLES = ['client', 'manager', 'admin'];
 
     private const PERMISSIONS = [

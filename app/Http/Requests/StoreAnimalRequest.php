@@ -6,6 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreAnimalRequest extends FormRequest
 {
+    // Valide la creation d'une fiche animal (texte + medias).
     public function authorize(): bool
     {
         return true;

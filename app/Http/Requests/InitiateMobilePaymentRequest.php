@@ -6,6 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class InitiateMobilePaymentRequest extends FormRequest
 {
+    // Valide les donnees requises pour initier un paiement.
     public function authorize(): bool
     {
         return true;

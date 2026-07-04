@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 
 class DemandeAdoptionApiController extends Controller
 {
+    // API de consultation et creation des demandes d'adoption.
     use ApiResponse;
 
     public function index(): JsonResponse

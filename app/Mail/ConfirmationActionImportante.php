@@ -10,6 +10,7 @@ use Illuminate\Queue\SerializesModels;
 
 class ConfirmationActionImportante extends Mailable implements ShouldQueue
 {
+    // Confirme a l'utilisateur une action metier sensible (ex: demande).
     use Queueable, SerializesModels;
 
     public AdoptionRequest $demande;

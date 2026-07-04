@@ -9,6 +9,7 @@ use Illuminate\Queue\SerializesModels;
 
 class EmailBienvenue extends Mailable implements ShouldQueue
 {
+    // Message de bienvenue envoye apres creation de compte.
     use Queueable, SerializesModels;
 
     public $utilisateur;

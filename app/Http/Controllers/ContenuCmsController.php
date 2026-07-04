@@ -11,6 +11,7 @@ use Illuminate\View\View;
 
 class ContenuCmsController extends Controller
 {
+    // Gere la creation, edition et publication des contenus CMS.
     public function creer(Request $request): View
     {
         $type = $request->string('type')->value() ?: 'article';

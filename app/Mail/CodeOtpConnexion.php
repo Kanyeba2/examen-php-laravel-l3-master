@@ -8,6 +8,7 @@ use Illuminate\Queue\SerializesModels;
 
 class CodeOtpConnexion extends Mailable
 {
+    // Envoie le code OTP utilise pendant la seconde etape de connexion.
     use Queueable, SerializesModels;
 
     public $utilisateur;

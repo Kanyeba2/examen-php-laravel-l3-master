@@ -19,6 +19,7 @@ use Illuminate\View\View;
 
 class MobilePaymentController extends Controller
 {
+    // Orchestre initiation, confirmation et recus des paiements mobiles.
     public function index(): View
     {
         $user = Auth::user();

@@ -18,6 +18,7 @@ use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
+    // Construit les dashboards client, manager et administrateur.
     public function admin(\Illuminate\Http\Request $request): View
     {
         $periode = $request->string('periode')->value();

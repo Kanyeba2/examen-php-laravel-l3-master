@@ -19,6 +19,7 @@ use Illuminate\View\View;
 
 class AnimalController extends Controller
 {
+    // Porte le CRUD des animaux et les filtres de consultation.
     public function index(Request $request): View
     {
         // Keep query composition in one place so search + filter remain easy to maintain.

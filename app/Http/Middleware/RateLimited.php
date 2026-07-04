@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RateLimited
 {
+    // Limite les appels repetitifs sur les routes sensibles.
     public function handle(Request $request, Closure $next): Response
     {
         $routeName = $request->route()?->getName() ?? $request->path();

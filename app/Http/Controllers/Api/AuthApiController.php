@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthApiController extends Controller
 {
+    // API d'authentification Sanctum (login/me/logout).
     use ApiResponse;
 
     public function login(Request $request): JsonResponse

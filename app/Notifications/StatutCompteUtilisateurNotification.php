@@ -8,6 +8,7 @@ use Illuminate\Notifications\Notification;
 
 class StatutCompteUtilisateurNotification extends Notification
 {
+    // Informe l'utilisateur des changements d'etat de son compte.
     use Queueable;
 
     public function __construct(private readonly bool $actif)

@@ -6,6 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class RegisterRequest extends FormRequest
 {
+    // Centralise la validation d'inscription utilisateur.
     public function authorize(): bool
     {
         return true;

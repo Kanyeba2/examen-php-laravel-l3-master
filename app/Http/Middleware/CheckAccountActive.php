@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckAccountActive
 {
+    // Bloque l'acces quand le compte utilisateur est desactive.
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();

@@ -14,6 +14,7 @@ use Illuminate\Queue\SerializesModels;
 
 class RecuPaiementMobile extends Mailable implements ShouldQueue
 {
+    // Envoie le recu PDF apres confirmation d'un paiement mobile.
     use Queueable, SerializesModels;
 
     public function __construct(public MobilePayment $payment)

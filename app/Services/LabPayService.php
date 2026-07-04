@@ -8,6 +8,7 @@ use Throwable;
 
 class LabPayService
 {
+    // Encapsule les appels HTTP vers l'API LabPay.
     public function initiate(MobilePayment $payment): array
     {
         if (! $this->isEnabled()) {

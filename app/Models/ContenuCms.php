@@ -7,8 +7,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ContenuCms extends Model
 {
+    // Variante francaise du modele CMS (meme table que CmsContent).
     protected $table = 'contenus_cms';
 
+    // Champs modifiables pour articles et pages CMS.
     protected $fillable = [
         'author_user_id',
         'type',
@@ -23,12 +25,14 @@ class ContenuCms extends Model
         'published_at',
     ];
 
+    // Conversions automatiques des attributs techniques.
     protected $casts = [
         'is_featured' => 'boolean',
         'sort_order' => 'integer',
         'published_at' => 'datetime',
     ];
 
+    // Auteur du contenu (relation user).
     public function auteur(): BelongsTo
     {
         return $this->belongsTo(User::class, 'author_user_id');
