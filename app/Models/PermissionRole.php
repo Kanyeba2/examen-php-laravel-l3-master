@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class PermissionRole extends Model
+{
+    protected $table = 'permissions_roles';
+
+    protected $fillable = [
+        'role',
+        'permission',
+        'enabled',
+    ];
+
+    protected $casts = [
+        'enabled' => 'boolean',
+    ];
+}
