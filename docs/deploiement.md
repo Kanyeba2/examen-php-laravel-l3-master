@@ -111,3 +111,54 @@ php artisan tinker --execute="echo config('database.default').PHP_EOL;"
 php artisan tinker --execute="echo config('queue.default').PHP_EOL;"
 php artisan tinker --execute="echo config('mail.default').PHP_EOL;"
 ```
+
+## 7. Plan B immediat: basculer vers Render
+
+Si Railway echoue au deploy source, basculer sur Render est souvent plus direct pour Laravel complet.
+
+Le projet inclut deja le blueprint Render: [render.yaml](../render.yaml)
+
+### Etapes exactes (Render)
+
+1. Ouvrir Render et se connecter avec GitHub.
+2. Choisir **New +** puis **Blueprint**.
+3. Selectionner le repo `Kanyeba2/examen-php-laravel-l3-master`.
+4. Render detecte automatiquement [render.yaml](../render.yaml) et propose:
+	- 1 service web PHP
+	- 1 worker queue
+	- 1 base PostgreSQL
+5. Lancer la creation.
+6. Quand les services sont crees, ouvrir le service web et definir les variables `sync: false`:
+	- `APP_KEY`
+	- `APP_URL`
+	- `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM_ADDRESS`
+	- `LABPAY_TOKEN` (si paiement actif)
+7. Ouvrir le Shell du service web et executer:
+
+```bash
+php artisan migrate --force
+php artisan db:seed --force
+php artisan storage:link
+php artisan optimize
+```
+
+8. Tester l URL publique du service web.
+
+### Verification rapide
+
+```bash
+php artisan route:list
+php artisan migrate:status
+php artisan tinker --execute="echo config('database.default').PHP_EOL;"
+php artisan tinker --execute="echo config('queue.default').PHP_EOL;"
+```
+
+## 8. Vercel (si vous voulez quand meme tester)
+
+Le projet inclut [vercel.json](../vercel.json) pour un test rapide, mais cette option reste moins adaptee a ce projet (sessions serveur + worker queue + callbacks paiements).
+
+Si vous testez Vercel:
+
+1. Importer le repo dans Vercel.
+2. Definir les variables d environnement comme en production.
+3. Utiliser une base externe (Postgres) et eviter les jobs critiques en asynchrone tant que le worker n est pas externalise.
